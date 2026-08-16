@@ -62,8 +62,6 @@
   .sub { color: #888; font-size: 15px; margin-bottom: 34px; }
   .sub b { color: #d63384; }
 
-  .btn-row { display: flex; justify-content: center; gap: 26px; }
-
   .btn {
     border: none; cursor: pointer;
     font-size: 22px; font-weight: 700;
@@ -83,6 +81,7 @@
     position: fixed; z-index: 10;
     background: #e5e5ea; color: #8a8a8f;
     box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    transition: none;
   }
   .btn-no:active { transform: scale(.9); }
 
@@ -90,7 +89,24 @@
     margin-top: 26px; font-size: 13px; color: #bbb;
   }
 
-  /* 点击爱之后的庆祝 */
+  /* "就知道你爱"过渡画面 */
+  .transition {
+    position: fixed; inset: 0; z-index: 15;
+    background: linear-gradient(160deg, #ff2d78, #a945e9);
+    display: none; align-items: center; justify-content: center;
+    animation: fadeIn .3s ease;
+  }
+  .transition.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .transition .t-wrap { text-align: center; color: #fff; padding: 20px; animation: tPop .5s cubic-bezier(.2, 1.6, .4, 1); }
+  .transition .t-wrap .t-emoji { font-size: 80px; display: block; margin-bottom: 16px; }
+  .transition .t-wrap h2 { font-size: 40px; text-shadow: 0 4px 16px rgba(0,0,0,.25); letter-spacing: 4px; }
+  @keyframes tPop {
+    from { transform: scale(.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* 最终庆祝 */
   .overlay {
     position: fixed; inset: 0; z-index: 20;
     background: linear-gradient(160deg, #ff2d78, #a945e9);
@@ -98,13 +114,9 @@
     animation: fadeIn .4s ease;
   }
   .overlay.show { display: flex; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  .overlay .win {
-    text-align: center; color: #fff; padding: 20px;
-  }
+  .overlay .win { text-align: center; color: #fff; padding: 20px; }
   .overlay .win .big { font-size: 72px; }
-  .overlay .win h2 { font-size: 36px; margin: 18px 0 10px; text-shadow: 0 4px 16px rgba(0,0,0,.25); }
+  .overlay .win h2 { font-size: 38px; margin: 18px 0 10px; text-shadow: 0 4px 16px rgba(0,0,0,.25); }
   .overlay .win p { font-size: 16px; opacity: .9; line-height: 1.8; }
   .overlay .win .note { margin-top: 28px; font-size: 13px; opacity: .7; }
 
@@ -122,37 +134,64 @@
 
 <div class="hearts" id="hearts"></div>
 
-<div class="card" id="card">
-  <span class="emoji">🐻</span>
-  <h1>文文爱不爱老公</h1>
-  <p class="sub">乖，选一个吧～点 <b>爱</b> 就可以离开页面啦 ❤️</p>
-  <div class="btn-row">
-    <button class="btn btn-yes" id="btnYes">爱 ❤️</button>
+<div class="card">
+  <!-- 第一层：文文爱不爱老公 -->
+  <div id="layer1">
+    <span class="emoji">🐻</span>
+    <h1>文文爱不爱老公</h1>
+    <p class="sub">乖，选一个吧～点 <b>爱</b> 就进入下一关 ❤️</p>
+    <div class="btn-row"><button class="btn btn-yes" id="btnYes1">爱 ❤️</button></div>
+    <p class="hint" id="hint1">提示：只能点"爱"哦～</p>
   </div>
-  <p class="hint" id="hint">提示：只有点"爱"才能退出哦～</p>
+
+  <!-- 第二层：叫爸爸 -->
+  <div id="layer2" style="display:none">
+    <span class="emoji">👨</span>
+    <h1>叫爸爸！</h1>
+    <p class="sub">乖，叫爸爸就放你走～点 <b>爸爸</b> 就能退出啦</p>
+    <div class="btn-row"><button class="btn btn-yes" id="btnYes2">爸爸 👨</button></div>
+    <p class="hint" id="hint2">提示：只能点"爸爸"才能退出哦～</p>
+  </div>
 </div>
 
-<button class="btn btn-no" id="btnNo">不爱 😠</button>
+<!-- 两个会躲的坏按钮 -->
+<button class="btn btn-no" id="btnNo1">不爱 😠</button>
+<button class="btn btn-no" id="btnNo2" style="display:none">不叫 😤</button>
 
+<!-- "就知道你爱"过渡 -->
+<div class="transition" id="transition">
+  <div class="t-wrap">
+    <span class="t-emoji">😘</span>
+    <h2>就知道你爱～</h2>
+  </div>
+</div>
+
+<!-- 最终庆祝 -->
 <div class="overlay" id="overlay">
   <div class="win">
     <div class="big">💞</div>
-    <h2>文文最爱老公啦！</h2>
-    <p>这是正确答案，逃不掉哒～<br>亲亲抱抱举高高 🥰</p>
+    <h2>真乖！爸爸爱你 ❤️</h2>
+    <p>文文最乖了～<br>亲亲抱抱举高高 🥰</p>
     <div class="note">现在可以放心退出页面啦</div>
   </div>
 </div>
 
 <script>
 (function () {
-  var yesBtn = document.getElementById('btnYes');
-  var noBtn = document.getElementById('btnNo');
-  var hint = document.getElementById('hint');
+  var heartsBox = document.getElementById('hearts');
+  var hint1 = document.getElementById('hint1');
+  var hint2 = document.getElementById('hint2');
+  var layer1 = document.getElementById('layer1');
+  var layer2 = document.getElementById('layer2');
+  var btnYes1 = document.getElementById('btnYes1');
+  var btnYes2 = document.getElementById('btnYes2');
+  var btnNo1 = document.getElementById('btnNo1');
+  var btnNo2 = document.getElementById('btnNo2');
+  var transition = document.getElementById('transition');
   var overlay = document.getElementById('overlay');
   var done = false;
 
   // 背景漂浮爱心
-  var heartsBox = document.getElementById('hearts');
   var heartEmojis = ['💗','💖','💕','💘','💝','❤️'];
   for (var i = 0; i < 18; i++) {
     var h = document.createElement('span');
@@ -165,57 +204,75 @@
     heartsBox.appendChild(h);
   }
 
-  // "不爱"按钮的躲闪
-  var dodgeCount = 0;
-  var noTexts = ['不爱 😠','点不到我~','嘿嘿，想点我？','跑啦跑啦~','追不上吧 😜','放弃吧～','我是真爱！'];
-
-  function dodge() {
-    dodgeCount++;
-    var maxW = window.innerWidth - noBtn.offsetWidth - 10;
-    var maxH = window.innerHeight - noBtn.offsetHeight - 10;
-    var x = Math.random() * Math.max(maxW, 10);
-    var y = Math.random() * Math.max(maxH, 10);
-    // 尽量别躲到真爱按钮上面
-    var yesRect = yesBtn.getBoundingClientRect();
-    for (var t = 0; t < 5; t++) {
-      if (x < yesRect.right + 20 && x + noBtn.offsetWidth > yesRect.left - 20 &&
-          y < yesRect.bottom + 20 && y + noBtn.offsetHeight > yesRect.top - 20) {
-        x = Math.random() * Math.max(maxW, 10);
-        y = Math.random() * Math.max(maxH, 10);
-      } else break;
+  // 通用躲闪逻辑
+  function makeDodger(btn, hint, yesBtn, noTexts) {
+    var dodgeCount = 0;
+    function dodge() {
+      dodgeCount++;
+      var maxW = window.innerWidth - btn.offsetWidth - 10;
+      var maxH = window.innerHeight - btn.offsetHeight - 10;
+      var x = Math.random() * Math.max(maxW, 10);
+      var y = Math.random() * Math.max(maxH, 10);
+      // 尽量别躲到"正确"按钮上面
+      var yesRect = yesBtn.getBoundingClientRect();
+      for (var t = 0; t < 5; t++) {
+        if (x < yesRect.right + 20 && x + btn.offsetWidth > yesRect.left - 20 &&
+            y < yesRect.bottom + 20 && y + btn.offsetHeight > yesRect.top - 20) {
+          x = Math.random() * Math.max(maxW, 10);
+          y = Math.random() * Math.max(maxH, 10);
+        } else break;
+      }
+      btn.style.left = x + 'px';
+      btn.style.top = y + 'px';
+      var scale = Math.max(0.62, 1 - dodgeCount * 0.06);
+      btn.style.transform = 'scale(' + scale + ') rotate(' + (Math.random() * 30 - 15) + 'deg)';
+      if (dodgeCount > 2) {
+        btn.textContent = noTexts[Math.min(dodgeCount - 1, noTexts.length - 1)];
+      }
+      if (dodgeCount >= 6) {
+        hint.textContent = '哼哼，已经躲了 ' + dodgeCount + ' 次啦，就只能点那个按钮咯 😏';
+      } else {
+        hint.textContent = '嘿嘿，被点跑啦～还剩那一个按钮～';
+      }
     }
-    noBtn.style.left = x + 'px';
-    noBtn.style.top = y + 'px';
-    // 躲了几次之后按钮变小、变调皮
-    var scale = Math.max(0.62, 1 - dodgeCount * 0.06);
-    noBtn.style.transform = 'scale(' + scale + ') rotate(' + (Math.random() * 30 - 15) + 'deg)';
-    if (dodgeCount > 2) {
-      noBtn.textContent = noTexts[Math.min(dodgeCount - 1, noTexts.length - 1)];
-    }
-    if (dodgeCount >= 6) {
-      hint.textContent = '哼哼，已经躲了 ' + dodgeCount + ' 次啦，文文就只能点"爱"咯 😏';
-    } else {
-      hint.textContent = '嘿嘿，"不爱"被点跑啦～还剩 "爱" 一个按钮～';
-    }
+    btn.addEventListener('mouseenter', function () { if (!done && btn.style.display !== 'none') dodge(); });
+    btn.addEventListener('touchstart', function (e) { if (!done && btn.style.display !== 'none') { e.preventDefault(); dodge(); } }, { passive: false });
+    btn.addEventListener('click', function (e) { if (!done && btn.style.display !== 'none') { e.preventDefault(); e.stopPropagation(); dodge(); } });
   }
 
-  // 桌面：鼠标刚移上去就躲
-  noBtn.addEventListener('mouseenter', function () { if (!done) dodge(); });
-  // 手机：手指刚按下去就躲（在点击生效之前）
-  noBtn.addEventListener('touchstart', function (e) { if (!done) { e.preventDefault(); dodge(); } }, { passive: false });
-  // 万一还是被点到了，也躲
-  noBtn.addEventListener('click', function (e) { if (!done) { e.preventDefault(); e.stopPropagation(); dodge(); } });
+  // 第一层：不爱 会躲
+  makeDodger(btnNo1, hint1, btnYes1, ['不爱 😠','点不到我~','嘿嘿，想点我？','跑啦跑啦~','追不上吧 😜','放弃吧～','我是真爱！']);
 
-  // 点"爱"：庆祝 + 允许退出
-  yesBtn.addEventListener('click', function () {
+  // 第二层：不叫 会躲
+  makeDodger(btnNo2, hint2, btnYes2, ['不叫 😤','我偏不叫！','略略略~','爸爸追不到~','才不叫呢！','打死不叫！','投降了…还是不叫！']);
+
+  // 第一关通过：点"爱" → 过渡 → 进入第二层
+  btnYes1.addEventListener('click', function () {
+    if (done) return;
+    btnNo1.style.display = 'none';
+    layer1.style.display = 'none';
+    transition.classList.add('show');
+    setTimeout(function () {
+      transition.classList.remove('show');
+      layer2.style.display = '';
+      // 把"不叫"按钮放出来，先给它一个初始随机位置
+      btnNo2.style.display = '';
+      var maxW = window.innerWidth - btnNo2.offsetWidth - 10;
+      var maxH = window.innerHeight - btnNo2.offsetHeight - 10;
+      btnNo2.style.left = (Math.random() * Math.max(maxW, 10)) + 'px';
+      btnNo2.style.top = (Math.random() * Math.max(maxH, 10)) + 'px';
+    }, 1600);
+  });
+
+  // 第二关通过：点"爸爸" → 最终庆祝 → 允许退出
+  btnYes2.addEventListener('click', function () {
     if (done) return;
     done = true;
-    noBtn.style.display = 'none';
-    hint.style.display = 'none';
+    btnNo2.style.display = 'none';
+    hint2.style.display = 'none';
     showCelebration();
   });
 
-  // 庆祝动效：全屏彩纸雨 + 爱心
   function showCelebration() {
     overlay.classList.add('show');
     var colors = ['#ffe066', '#ff8fb3', '#7ef7ff', '#b6ff8f', '#ffffff'];
@@ -234,7 +291,7 @@
     }
   }
 
-  // 没点"爱"之前，不让轻易退出页面（浏览器会弹确认框）
+  // 没点完"爸爸"之前，不让轻易退出页面
   window.addEventListener('beforeunload', function (e) {
     if (!done) {
       e.preventDefault();

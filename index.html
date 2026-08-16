@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>文文爱不爱老公</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(160deg, #ff9a9e 0%, #fecfef 50%, #a18cd1 100%);
+    display: flex; align-items: center; justify-content: center;
+    user-select: none; -webkit-user-select: none;
+  }
+
+  /* 背景漂浮爱心 */
+  .hearts { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .heart-fly {
+    position: absolute; bottom: -40px;
+    font-size: 24px; opacity: 0;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: .8; }
+    90%  { opacity: .6; }
+    100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+  }
+
+  .card {
+    position: relative; z-index: 1;
+    width: min(88vw, 400px);
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    border-radius: 24px;
+    padding: 40px 28px 48px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(214, 51, 132, .35);
+    animation: popIn .5s cubic-bezier(.2, 1.4, .4, 1);
+  }
+  @keyframes popIn {
+    from { transform: scale(.7); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  .emoji { font-size: 64px; display: block; margin-bottom: 12px; animation: bounce 1.6s infinite; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+
+  h1 {
+    font-size: 34px;
+    color: #d63384;
+    background: linear-gradient(90deg, #e94c8f, #a945e9);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+  }
+  .sub { color: #888; font-size: 15px; margin-bottom: 34px; }
+  .sub b { color: #d63384; }
+
+  .btn-row { display: flex; justify-content: center; gap: 26px; }
+
+  .btn {
+    border: none; cursor: pointer;
+    font-size: 22px; font-weight: 700;
+    padding: 16px 40px;
+    border-radius: 999px;
+    transition: transform .12s ease, box-shadow .2s ease;
+    font-family: inherit;
+  }
+  .btn-yes {
+    background: linear-gradient(135deg, #ff5e8a, #ff2d78);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(255, 45, 120, .45);
+  }
+  .btn-yes:active { transform: scale(.94); }
+
+  .btn-no {
+    position: fixed; z-index: 10;
+    background: #e5e5ea; color: #8a8a8f;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+  .btn-no:active { transform: scale(.9); }
+
+  .hint {
+    margin-top: 26px; font-size: 13px; color: #bbb;
+  }
+
+  /* 点击爱之后的庆祝 */
+  .overlay {
+    position: fixed; inset: 0; z-index: 20;
+    background: linear-gradient(160deg, #ff2d78, #a945e9);
+    display: none; align-items: center; justify-content: center;
+    animation: fadeIn .4s ease;
+  }
+  .overlay.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .overlay .win {
+    text-align: center; color: #fff; padding: 20px;
+  }
+  .overlay .win .big { font-size: 72px; }
+  .overlay .win h2 { font-size: 36px; margin: 18px 0 10px; text-shadow: 0 4px 16px rgba(0,0,0,.25); }
+  .overlay .win p { font-size: 16px; opacity: .9; line-height: 1.8; }
+  .overlay .win .note { margin-top: 28px; font-size: 13px; opacity: .7; }
+
+  .confetti {
+    position: absolute; width: 12px; height: 12px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hearts" id="hearts"></div>
+
+<div class="card" id="card">
+  <span class="emoji">🐻</span>
+  <h1>文文爱不爱老公</h1>
+  <p class="sub">乖，选一个吧～点 <b>爱</b> 就可以离开页面啦 ❤️</p>
+  <div class="btn-row">
+    <button class="btn btn-yes" id="btnYes">爱 ❤️</button>
+  </div>
+  <p class="hint" id="hint">提示：只有点"爱"才能退出哦～</p>
+</div>
+
+<button class="btn btn-no" id="btnNo">不爱 😠</button>
+
+<div class="overlay" id="overlay">
+  <div class="win">
+    <div class="big">💞</div>
+    <h2>文文最爱老公啦！</h2>
+    <p>这是正确答案，逃不掉哒～<br>亲亲抱抱举高高 🥰</p>
+    <div class="note">现在可以放心退出页面啦</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var yesBtn = document.getElementById('btnYes');
+  var noBtn = document.getElementById('btnNo');
+  var hint = document.getElementById('hint');
+  var overlay = document.getElementById('overlay');
+  var done = false;
+
+  // 背景漂浮爱心
+  var heartsBox = document.getElementById('hearts');
+  var heartEmojis = ['💗','💖','💕','💘','💝','❤️'];
+  for (var i = 0; i < 18; i++) {
+    var h = document.createElement('span');
+    h.className = 'heart-fly';
+    h.textContent = heartEmojis[i % heartEmojis.length];
+    h.style.left = Math.random() * 100 + 'vw';
+    h.style.fontSize = (16 + Math.random() * 24) + 'px';
+    h.style.animationDuration = (6 + Math.random() * 8) + 's';
+    h.style.animationDelay = (Math.random() * 8) + 's';
+    heartsBox.appendChild(h);
+  }
+
+  // "不爱"按钮的躲闪
+  var dodgeCount = 0;
+  var noTexts = ['不爱 😠','点不到我~','嘿嘿，想点我？','跑啦跑啦~','追不上吧 😜','放弃吧～','我是真爱！'];
+
+  function dodge() {
+    dodgeCount++;
+    var maxW = window.innerWidth - noBtn.offsetWidth - 10;
+    var maxH = window.innerHeight - noBtn.offsetHeight - 10;
+    var x = Math.random() * Math.max(maxW, 10);
+    var y = Math.random() * Math.max(maxH, 10);
+    // 尽量别躲到真爱按钮上面
+    var yesRect = yesBtn.getBoundingClientRect();
+    for (var t = 0; t < 5; t++) {
+      if (x < yesRect.right + 20 && x + noBtn.offsetWidth > yesRect.left - 20 &&
+          y < yesRect.bottom + 20 && y + noBtn.offsetHeight > yesRect.top - 20) {
+        x = Math.random() * Math.max(maxW, 10);
+        y = Math.random() * Math.max(maxH, 10);
+      } else break;
+    }
+    noBtn.style.left = x + 'px';
+    noBtn.style.top = y + 'px';
+    // 躲了几次之后按钮变小、变调皮
+    var scale = Math.max(0.62, 1 - dodgeCount * 0.06);
+    noBtn.style.transform = 'scale(' + scale + ') rotate(' + (Math.random() * 30 - 15) + 'deg)';
+    if (dodgeCount > 2) {
+      noBtn.textContent = noTexts[Math.min(dodgeCount - 1, noTexts.length - 1)];
+    }
+    if (dodgeCount >= 6) {
+      hint.textContent = '哼哼，已经躲了 ' + dodgeCount + ' 次啦，文文就只能点"爱"咯 😏';
+    } else {
+      hint.textContent = '嘿嘿，"不爱"被点跑啦～还剩 "爱" 一个按钮～';
+    }
+  }
+
+  // 桌面：鼠标刚移上去就躲
+  noBtn.addEventListener('mouseenter', function () { if (!done) dodge(); });
+  // 手机：手指刚按下去就躲（在点击生效之前）
+  noBtn.addEventListener('touchstart', function (e) { if (!done) { e.preventDefault(); dodge(); } }, { passive: false });
+  // 万一还是被点到了，也躲
+  noBtn.addEventListener('click', function (e) { if (!done) { e.preventDefault(); e.stopPropagation(); dodge(); } });
+
+  // 点"爱"：庆祝 + 允许退出
+  yesBtn.addEventListener('click', function () {
+    if (done) return;
+    done = true;
+    noBtn.style.display = 'none';
+    hint.style.display = 'none';
+    showCelebration();
+  });
+
+  // 庆祝动效：全屏彩纸雨 + 爱心
+  function showCelebration() {
+    overlay.classList.add('show');
+    var colors = ['#ffe066', '#ff8fb3', '#7ef7ff', '#b6ff8f', '#ffffff'];
+    for (var i = 0; i < 70; i++) {
+      var c = document.createElement('span');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.top = '-5vh';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      c.style.width = (6 + Math.random() * 10) + 'px';
+      c.style.height = (8 + Math.random() * 12) + 'px';
+      c.style.animationDuration = (1.5 + Math.random() * 2.5) + 's';
+      c.style.animationDelay = (Math.random() * 0.8) + 's';
+      overlay.appendChild(c);
+    }
+  }
+
+  // 没点"爱"之前，不让轻易退出页面（浏览器会弹确认框）
+  window.addEventListener('beforeunload', function (e) {
+    if (!done) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+})();
+</script>
+</body>
+</html>

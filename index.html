@@ -204,8 +204,8 @@
     heartsBox.appendChild(h);
   }
 
-  // 通用躲闪逻辑
-  function makeDodger(btn, hint, yesBtn, noTexts) {
+  // 通用躲闪逻辑（台词全部站在"老公/爸爸"视角）
+  function makeDodger(btn, hint, yesBtn, noTexts, hintTexts) {
     var dodgeCount = 0;
     function dodge() {
       dodgeCount++;
@@ -229,22 +229,22 @@
       if (dodgeCount > 2) {
         btn.textContent = noTexts[Math.min(dodgeCount - 1, noTexts.length - 1)];
       }
-      if (dodgeCount >= 6) {
-        hint.textContent = '哼哼，已经躲了 ' + dodgeCount + ' 次啦，就只能点那个按钮咯 😏';
-      } else {
-        hint.textContent = '嘿嘿，被点跑啦～还剩那一个按钮～';
-      }
+      hint.textContent = hintTexts[Math.min(dodgeCount - 1, hintTexts.length - 1)];
     }
     btn.addEventListener('mouseenter', function () { if (!done && btn.style.display !== 'none') dodge(); });
     btn.addEventListener('touchstart', function (e) { if (!done && btn.style.display !== 'none') { e.preventDefault(); dodge(); } }, { passive: false });
     btn.addEventListener('click', function (e) { if (!done && btn.style.display !== 'none') { e.preventDefault(); e.stopPropagation(); dodge(); } });
   }
 
-  // 第一层：不爱 会躲
-  makeDodger(btnNo1, hint1, btnYes1, ['不爱 😠','点不到我~','嘿嘿，想点我？','跑啦跑啦~','追不上吧 😜','放弃吧～','我是真爱！']);
+  // 第一层：不爱 会躲（老公视角：催文文点"爱"）
+  makeDodger(btnNo1, hint1, btnYes1,
+    ['不爱 😠','就不给你点~','乖嘛~点爱嘛~','点爱爱嘛~','快选爱嘛~','就剩爱啦~','听话，点爱~'],
+    ['就不给你点！','乖嘛，点爱嘛～','快选爱嘛～','只剩爱可以点啦～','听话，乖乖点爱～','乖，点爱就让你过关～']);
 
-  // 第二层：不叫 会躲
-  makeDodger(btnNo2, hint2, btnYes2, ['不叫 😤','我偏不叫！','略略略~','爸爸追不到~','才不叫呢！','打死不叫！','投降了…还是不叫！']);
+  // 第二层：不叫 会躲（老公/爸爸视角：催文文叫爸爸）
+  makeDodger(btnNo2, hint2, btnYes2,
+    ['不叫 😤','快叫嘛~','乖嘛~叫嘛~','就不给你点！','快点叫爸爸~','叫嘛叫嘛~','乖乖叫嘛~'],
+    ['就不给你点！','快叫嘛～','乖嘛～叫嘛～','快点叫爸爸！','叫嘛叫嘛～','乖乖叫爸爸，就让你退出～']);
 
   // 第一关通过：点"爱" → 过渡 → 进入第二层
   btnYes1.addEventListener('click', function () {
